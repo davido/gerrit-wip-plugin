@@ -13,43 +13,38 @@
 // limitations under the License.
 
 Gerrit.install(function(self) {
-    function onWip(c) {
-      var f = c.textarea();
-      var b = c.button('WIP', {onclick: function(){
+    function onSetWip(c) {
+      var t = c.textarea();
+      var b = c.button('WIP', {onclick: function() {
         c.call(
-          {message: f.value},
+          {message: t.value},
           function(r) {
             c.hide();
-            window.alert(r);
             c.refresh();
           });
       }});
       c.popup(c.div(
-        f,
+        t,
         c.br(),
         b));
-      f.focus();
+      t.focus();
     }
-    self.onAction('revision', 'wip', onWip);
-  });
-
-Gerrit.install(function(self) {
-    function onR4r(c) {
-      var f = c.textarea();
-      var b = c.button('Ready', {onclick: function(){
-        c.call(
-          {message: f.value},
-          function(r) {
-            c.hide();
-            window.alert(r);
-            c.refresh();
-          });
-      }});
-      c.popup(c.div(
-        f,
-        c.br(),
-        b));
-      f.focus();
-    }
-    self.onAction('revision', 'r4r', onR4r);
+    function onSetReady(c) {
+        var t = c.textarea();
+        var b = c.button('Ready', {onclick: function() {
+          c.call(
+            {message: t.value},
+            function(r) {
+              c.hide();
+              c.refresh();
+            });
+        }});
+        c.popup(c.div(
+          t,
+          c.br(),
+          b));
+        t.focus();
+      }
+      self.onAction('revision', 'set-ready', onSetReady);
+      self.onAction('revision', 'set-wip', onSetWip);
   });

@@ -32,9 +32,9 @@ public class Module extends AbstractModule {
     install(new RestApiModule() {
       @Override
       protected void configure() {
-        post(REVISION_KIND, "wip")
+        post(REVISION_KIND, "set-wip")
             .to(WorkInProgressAction.class);
-        post(REVISION_KIND, "r4r")
+        post(REVISION_KIND, "set-ready")
             .to(ReadyForReviewAction.class);
       }
     });

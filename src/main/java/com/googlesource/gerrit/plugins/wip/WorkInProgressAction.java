@@ -14,52 +14,35 @@
 
 package com.googlesource.gerrit.plugins.wip;
 
-import java.util.Collections;
-
-import com.google.common.base.Strings;
 import com.google.gerrit.extensions.annotations.RequiresCapability;
-import com.google.gerrit.extensions.restapi.AuthException;
 import com.google.gerrit.extensions.restapi.ResourceConflictException;
+import com.google.gerrit.extensions.restapi.Response;
 import com.google.gerrit.extensions.restapi.RestModifyView;
 import com.google.gerrit.extensions.webui.UiAction;
 import com.google.gerrit.reviewdb.client.Change;
 import com.google.gerrit.reviewdb.client.Change.Status;
-import com.google.gerrit.reviewdb.client.ChangeMessage;
 import com.google.gerrit.reviewdb.client.PatchSet;
 import com.google.gerrit.reviewdb.server.ReviewDb;
-import com.google.gerrit.server.ApprovalsUtil;
-import com.google.gerrit.server.ChangeUtil;
-import com.google.gerrit.server.IdentifiedUser;
+import com.google.gerrit.server.CurrentUser;
 import com.google.gerrit.server.change.RevisionResource;
-import com.google.gerrit.server.project.ChangeControl;
-import com.google.gwtorm.server.AtomicUpdate;
 import com.google.gwtorm.server.OrmException;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 @RequiresCapability(WorkInProgressCapability.WORK_IN_PROGRESS)
-class WorkInProgressAction implements UiAction<RevisionResource>,
-    RestModifyView<RevisionResource, WorkInProgressAction.Input> {
-  static class Input {
-    String message;
-  }
-
-  private final Provider<ReviewDb> dbProvider;
+class WorkInProgressAction extends BaseAction implements
+    UiAction<RevisionResource>,
+    RestModifyView<RevisionResource, BaseAction.Input> {
 
   @Inject
-  WorkInProgressAction(Provider<ReviewDb> dbProvider) {
-    this.dbProvider = dbProvider;
+  WorkInProgressAction(Provider<ReviewDb> dbProvider,
+      Provider<CurrentUser> userProvider) {
+    super(dbProvider, userProvider);
   }
 
   @Override
-  public String apply(RevisionResource rsrc, Input input)
-      throws AuthException, ResourceConflictException, OrmException {
-    ChangeControl control = rsrc.getControl();
-    if (!control.getCurrentUser().isIdentifiedUser()) {
-      throw new AuthException("not permitted to modify change status");
-    }
-
-    IdentifiedUser caller = (IdentifiedUser) control.getCurrentUser();
+  public Object apply(RevisionResource rsrc, Input input)
+      throws ResourceConflictException, OrmException {
     Change change = rsrc.getChange();
     if (change.getStatus() != Status.NEW) {
       throw new ResourceConflictException("change is " + status(change));
@@ -69,75 +52,17 @@ class WorkInProgressAction implements UiAction<RevisionResource>,
       throw new ResourceConflictException("not current patch set");
     }
 
-    ChangeMessage message;
-    ReviewDb db = dbProvider.get();
-    db.changes().beginTransaction(change.getId());
-    try {
-      change = db.changes().atomicUpdate(
-        change.getId(),
-        new AtomicUpdate<Change>() {
-          @Override
-          public Change update(Change change) {
-            if (change.getStatus() == Status.NEW) {
-              change.setStatus(Status.WORKINPROGRESS);
-              ChangeUtil.updated(change);
-              return change;
-            }
-            return null;
-          }
-        });
-
-      if (change == null) {
-        throw new ResourceConflictException("change is "
-            + status(db.changes().get(rsrc.getChange().getId())));
-      }
-
-      message = newMessage(input, caller, change);
-      db.changeMessages().insert(Collections.singleton(message));
-      new ApprovalsUtil(db).syncChangeStatus(change);
-      db.commit();
-    } finally {
-      db.rollback();
-    }
-
-    return String.format("Status changed to WIP");
+    changeStatus(change, input, Status.NEW, Status.WORKINPROGRESS);
+    return Response.none();
   }
 
   @Override
   public Description getDescription(RevisionResource rsrc) {
     PatchSet.Id current = rsrc.getChange().currentPatchSetId();
     return new Description()
-        .setLabel("Work In Progress")
+        .setLabel("WIP")
         .setTitle("Set Work In Progress")
         .setVisible(rsrc.getChange().getStatus() == Status.NEW
            && rsrc.getPatchSet().getId().equals(current));
-  }
-
-  private ChangeMessage newMessage(Input input, IdentifiedUser caller,
-      Change change) throws OrmException {
-    StringBuilder msg = new StringBuilder(
-        "Change "
-        + change.getId().get()
-        + ": Work In Progress");
-    if (!Strings.nullToEmpty(input.message).trim().isEmpty()) {
-      msg.append("\n\n");
-      msg.append(input.message.trim());
-    }
-
-    ChangeMessage message = new ChangeMessage(
-        new ChangeMessage.Key(
-            change.getId(),
-            ChangeUtil.messageUUID(dbProvider.get())),
-        caller.getAccountId(),
-        change.getLastUpdatedOn(),
-        change.currentPatchSetId());
-    message.setMessage(msg.toString());
-    return message;
-  }
-
-  private static String status(Change change) {
-    return change != null
-        ? change.getStatus().name().toLowerCase()
-        : "deleted";
   }
 }
