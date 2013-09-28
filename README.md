@@ -25,12 +25,6 @@ It uses the following features that were introduced in Gerrit 2.8:
 * Setting UiActions invisible if the user doesn't have the ACL
 * Plugin can provide its name in MANIFEST file 
 
-TODO:
-
-* Add SSH commands
-* Add documentation
-* Optionally send mail
-
 To see it in action:
 
 Turn normal change to WIP and provide description why:
@@ -83,3 +77,10 @@ Old change screen doesn't support JS API. So that the popup dialog is not shown
 if "Work In Progress" and "Ready In Review" buttons are useda and no comment
 can be provided. New change screen should be used for best experience with
 WIP Workflow feature. 
+
+Todo:
+
+* Add SSH commands
+* Add documentation
+* Optionally send mail
+
