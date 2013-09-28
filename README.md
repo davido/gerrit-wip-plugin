@@ -39,6 +39,9 @@ http://i.imgur.com/h2hQQT4.png
 New patch set is reloaded and Ready for Review button apears instead od WIP:
 http://imgur.com/JGCSyLO
 
+The change appears with status "Work In Progress" on change list:
+http://i.imgur.com/P0HCEcn.png
+
 Reviewers Dashboard filters that change out:
 http://imgur.com/fr4nKv7
 
