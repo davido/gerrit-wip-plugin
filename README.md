@@ -20,15 +20,16 @@ to that group, so that only "Change Owners" can toggle the WIP state.
 
 It uses the following features that were introduced in Gerrit 2.8:
 
-* Plugin can contribute buttons (UiAction) with JavaScript API
 * Plugin owned capabilities
+* Plugin can contribute buttons (UiAction) with JavaScript API
+* Setting UiActions invisible if the user doesn't have the ACL
 * Plugin can provide its name in MANIFEST file 
 
 TODO:
 
-* Add SSH commands:
+* Add SSH commands
 * Add documentation
-* Send mail
+* Optionally send mail
 
 To see it in action:
 
@@ -44,6 +45,9 @@ http://i.imgur.com/h2hQQT4.png
 New patch set is reloaded and Ready for Review button apears instead od WIP:
 http://imgur.com/JGCSyLO
 
+Reviewers Dashboard filters that change out:
+https://gerrit-review.googlesource.com/48254
+
 Mark it as ready for review:
 http://imgur.com/tnMGg16
 
@@ -53,24 +57,27 @@ http://imgur.com/ha3mFqA
 Comments are updates correspondingly:
 http://imgur.com/l4E8evp
 
-Install
+Reviewers Dashboard shows that change again:
+http://i.imgur.com/VdAtuIO.png
 
-# Patch upstream Gerrit
-# Cherry pick the dependent changes mentioned above
-# buck build gerrit
-# buck build api_install
-# deploy the patched Gerrit buck-out/gen/gerrit.war
-# git clone https://github.com/davido/gerrit-wip-plugin
-# cd gerrit-wip-plugin
-# mvn package
-# deploy target/wip-plugin-1.0.jar $site_path/plugins
+Install:
 
-Configure
+* Patch upstream Gerrit
+* Cherry pick the dependent changes mentioned above
+* buck build gerrit
+* buck build api_install
+* deploy the patched Gerrit buck-out/gen/gerrit.war
+* git clone https://github.com/davido/gerrit-wip-plugin
+* cd gerrit-wip-plugin
+* mvn package
+* deploy target/wip-plugin-1.0.jar $site_path/plugins
+
+Configure:
 
 * Grant the Work In Progress global capability to a group
 * Done
 
-Known problems
+Known limitations:
 
 Old change screen doesn't support JS API. So that the popup dialog is not shown
 if "Work In Progress" and "Ready In Review" buttons are useda and no comment
