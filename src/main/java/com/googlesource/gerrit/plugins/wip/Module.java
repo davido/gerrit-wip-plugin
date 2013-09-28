@@ -15,7 +15,10 @@
 package com.googlesource.gerrit.plugins.wip;
 
 import static com.google.gerrit.server.change.RevisionResource.REVISION_KIND;
+import static com.googlesource.gerrit.plugins.wip.WorkInProgressCapability.WORK_IN_PROGRESS;
 
+import com.google.gerrit.extensions.annotations.Exports;
+import com.google.gerrit.extensions.config.CapabilityDefinition;
 import com.google.gerrit.extensions.restapi.RestApiModule;
 import com.google.inject.AbstractModule;
 
@@ -23,6 +26,9 @@ public class Module extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(CapabilityDefinition.class)
+        .annotatedWith(Exports.named(WORK_IN_PROGRESS))
+        .to(WorkInProgressCapability.class);
     install(new RestApiModule() {
       @Override
       protected void configure() {
