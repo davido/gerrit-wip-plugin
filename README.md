@@ -74,9 +74,9 @@ Configure:
 Known limitations:
 
 Old change screen doesn't support JS API. So that the popup dialog is not shown
-if "Work In Progress" and "Ready In Review" buttons are useda and no comment
+if "Work In Progress" and "Ready In Review" buttons are used and no comments
 can be provided. New change screen should be used for best experience with
-WIP Workflow feature. 
+WIP Workflow plugin. 
 
 Todo:
 
