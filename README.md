@@ -40,7 +40,7 @@ New patch set is reloaded and Ready for Review button apears instead od WIP:
 http://imgur.com/JGCSyLO
 
 Reviewers Dashboard filters that change out:
-https://gerrit-review.googlesource.com/48254
+http://imgur.com/fr4nKv7
 
 Mark it as ready for review:
 http://imgur.com/tnMGg16
