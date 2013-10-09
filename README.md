@@ -11,40 +11,40 @@ Optionally it can be used in combination with new "Change Owners"
 group. The plugin owned capability "Work In Progress" can be granted
 to that group, so that only "Change Owners" can toggle the WIP state.
 
-Typical WIP Workflow
---------------------
+WIP Workflow
+------------
 
 Turn normal change to WIP and provide description why:
 
-[[src/main/resources/Documentation/images/mark_as_wip.png]]
+![Turn normal change to WIP and provide description why](src/main/resources/Documentation/images/mark_as_wip.png)
 
 New comment message:
 
-[[src/main/resources/Documentation/images/wip_comment.png]]
+![New comment message](src/main/resources/Documentation/images/wip_comment.png)
 
 Ready For Review button is shown for WIP change:
 
-[[src/main/resources/Documentation/images/ready_for_review.png]]
+![Ready For Review button is shown for WIP change](src/main/resources/Documentation/images/ready_for_review.png)
 
 The change is shown with status "Work In Progress" on change list:
 
-[[src/main/resources/Documentation/images/wip_on_change_list.png]]
+![The change is shown with status "Work In Progress" on change list](src/main/resources/Documentation/images/wip_on_change_list.png)
 
 Reviewers Dashboard filters the WIP changes:
 
-[[src/main/resources/Documentation/images/filtered_wip_changes.png]]
+![Reviewers Dashboard filters the WIP changes](src/main/resources/Documentation/images/filtered_wip_changes.png)
 
 Mark it as Ready For Review:
 
-[[src/main/resources/Documentation/images/mark_as_ready.png]]
+![Mark it as Ready For Review](src/main/resources/Documentation/images/mark_as_ready.png)
 
 Comments are updated correspondingly:
 
-[[src/main/resources/Documentation/images/updated_comments.png]]
+![Comments are updated correspondingly](src/main/resources/Documentation/images/updated_comments.png)
 
 Reviewers Dashboard shows that change again:
 
-[[src/main/resources/Documentation/images/changes_are_shown.png]]
+![Reviewers Dashboard shows that change again](src/main/resources/Documentation/images/changes_are_shown.png)
 
 Known limitations
 -----------------
