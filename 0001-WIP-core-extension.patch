@@ -1,0 +1,127 @@
+From 832d8d6c55b9f59c6d0fe7a01d9a605994af2ac3 Mon Sep 17 00:00:00 2001
+From: David Ostrovsky <david@ostrovsky.org>
+Date: Sun, 29 Sep 2013 19:55:20 +0200
+Subject: [PATCH] WIP core extension
+
+Change-Id: I54bc3b3d91b642814252f42d47744d12a3310647
+---
+ .../com/google/gerrit/client/changes/ChangeConstants.java   |  1 +
+ .../google/gerrit/client/changes/ChangeConstants.properties |  1 +
+ .../main/java/com/google/gerrit/client/changes/Util.java    |  2 ++
+ .../main/java/com/google/gerrit/reviewdb/client/Change.java | 13 +++++++++++++
+ .../java/com/google/gerrit/server/index/ChangeField.java    |  4 ++++
+ .../gerrit/server/query/change/ReviewerPredicate.java       |  7 +++++++
+ 6 files changed, 28 insertions(+)
+
+diff --git a/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.java b/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.java
+index 2d95915..a27f278 100644
+--- a/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.java
++++ b/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.java
+@@ -22,6 +22,7 @@ public interface ChangeConstants extends Constants {
+   String statusLongMerged();
+   String statusLongAbandoned();
+   String statusLongDraft();
++  String statusLongWorkInProgress();
+   String readyToSubmit();
+   String mergeConflict();
+   String notCurrent();
+diff --git a/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.properties b/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.properties
+index 60fc214..e52388c 100644
+--- a/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.properties
++++ b/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/ChangeConstants.properties
+@@ -3,6 +3,7 @@ statusLongSubmitted = Submitted, Merge Pending
+ statusLongMerged = Merged
+ statusLongAbandoned = Abandoned
+ statusLongDraft = Draft
++statusLongWorkInProgress = Work In Progress
+ readyToSubmit = Ready to Submit
+ mergeConflict = Merge Conflict
+ notCurrent = Not Current
+diff --git a/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/Util.java b/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/Util.java
+index 590ad87..9e1c146 100644
+--- a/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/Util.java
++++ b/gerrit-gwtui/src/main/java/com/google/gerrit/client/changes/Util.java
+@@ -60,6 +60,8 @@ public class Util {
+         return C.statusLongMerged();
+       case ABANDONED:
+         return C.statusLongAbandoned();
++      case WORKINPROGRESS:
++        return C.statusLongWorkInProgress();
+       default:
+         return status.name();
+     }
+diff --git a/gerrit-reviewdb/src/main/java/com/google/gerrit/reviewdb/client/Change.java b/gerrit-reviewdb/src/main/java/com/google/gerrit/reviewdb/client/Change.java
+index 7dedf14..f5b253b 100644
+--- a/gerrit-reviewdb/src/main/java/com/google/gerrit/reviewdb/client/Change.java
++++ b/gerrit-reviewdb/src/main/java/com/google/gerrit/reviewdb/client/Change.java
+@@ -187,6 +187,8 @@ public final class Change {
+   public static final char STATUS_SUBMITTED = 's';
+   /** Database constant for {@link Status#DRAFT}. */
+   public static final char STATUS_DRAFT = 'd';
++  /** Database constant for {@link Status#WORKINPROGRESS} */
++  private static final char STATUS_WIP = 'w';
+   /** Maximum database status constant for an open change. */
+   private static final char MAX_OPEN = 'z';
+ 
+@@ -279,6 +281,17 @@ public final class Change {
+     MERGED(STATUS_MERGED),
+ 
+     /**
++     * Change is still open, but a work in progress.
++     *
++     * <p>
++     * The change owner, or someone with approval authority, has set a change from
++     * {@link #NEW} to this state. It implies that there is more work to be done,
++     * but the change will not show up in any review lists until a new patch set
++     * is pushed.
++     */
++    WORKINPROGRESS(STATUS_WIP),
++
++    /**
+      * Change is closed, but was not submitted to its destination branch.
+      *
+      * <p>
+diff --git a/gerrit-server/src/main/java/com/google/gerrit/server/index/ChangeField.java b/gerrit-server/src/main/java/com/google/gerrit/server/index/ChangeField.java
+index 0ee43e9..93ec4ff 100644
+--- a/gerrit-server/src/main/java/com/google/gerrit/server/index/ChangeField.java
++++ b/gerrit-server/src/main/java/com/google/gerrit/server/index/ChangeField.java
+@@ -191,6 +191,10 @@ public class ChangeField {
+         public Iterable<Integer> get(ChangeData input, FillArgs args)
+             throws OrmException {
+           Set<Integer> r = Sets.newHashSet();
++          if (input.getChange().getStatus() == Change.Status.WORKINPROGRESS) {
++            return r;
++          }
++
+           for (PatchSetApproval a : input.allApprovals(args.db)) {
+             r.add(a.getAccountId().get());
+           }
+diff --git a/gerrit-server/src/main/java/com/google/gerrit/server/query/change/ReviewerPredicate.java b/gerrit-server/src/main/java/com/google/gerrit/server/query/change/ReviewerPredicate.java
+index 9e9d8bf..a8f7323 100644
+--- a/gerrit-server/src/main/java/com/google/gerrit/server/query/change/ReviewerPredicate.java
++++ b/gerrit-server/src/main/java/com/google/gerrit/server/query/change/ReviewerPredicate.java
+@@ -15,7 +15,9 @@
+ package com.google.gerrit.server.query.change;
+ 
+ import com.google.gerrit.reviewdb.client.Account;
++import com.google.gerrit.reviewdb.client.Change;
+ import com.google.gerrit.reviewdb.client.PatchSetApproval;
++import com.google.gerrit.reviewdb.client.Change.Status;
+ import com.google.gerrit.reviewdb.server.ReviewDb;
+ import com.google.gerrit.server.index.ChangeField;
+ import com.google.gerrit.server.index.IndexPredicate;
+@@ -38,6 +40,11 @@ class ReviewerPredicate extends IndexPredicate<ChangeData> {
+ 
+   @Override
+   public boolean match(final ChangeData object) throws OrmException {
++    Change c = object.change(dbProvider);
++    if (c.getStatus() == Status.WORKINPROGRESS) {
++      return false;
++    }
++
+     for (PatchSetApproval p : object.approvals(dbProvider)) {
+       if (id.equals(p.getAccountId())) {
+         return true;
+-- 
+1.8.1.4
+
