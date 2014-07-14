@@ -1,3 +1,8 @@
+Outdated, latest verson is:
+===========================
+
+ https://gerrit-review.googlesource.com/#/admin/projects/plugins/wip
+
 Gerrit Work in Progress plugin
 ==============================
 
