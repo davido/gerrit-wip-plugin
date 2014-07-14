@@ -1,5 +1,5 @@
-Outdated, latest verson is:
-===========================
+Outdated, latest version is:
+============================
 
  https://gerrit-review.googlesource.com/#/admin/projects/plugins/wip
 
